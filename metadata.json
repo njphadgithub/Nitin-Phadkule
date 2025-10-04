@@ -1,0 +1,5 @@
+{
+  "name": "AI Study Guide Generator by Prof Nitin Phadkule",
+  "description": "An AI agent that reads educational content from PDF, TXT, or CSV files and generates personalized study guides, including summaries, Q&A, and flashcards, which can be exported as a PDF.",
+  "requestFramePermissions": []
+}
