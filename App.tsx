@@ -1,6 +1,6 @@
 // FIX: Implement the main App component to structure the application.
 import React, { useState } from 'react';
-import { StudyGuide } from './types';
+import { StudyGuide, Difficulty } from './types';
 import FileUpload from './components/FileUpload';
 import StudyGuideDisplay from './components/StudyGuideDisplay';
 import Loader from './components/Loader';
@@ -12,6 +12,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [difficulty, setDifficulty] = useState<Difficulty>('intermediate');
 
   const handleFileChange = (selectedFile: File | null) => {
     setFile(selectedFile);
@@ -33,7 +34,7 @@ const App: React.FC = () => {
       if (textContent.trim().length === 0) {
         throw new Error("The document appears to be empty or could not be read.");
       }
-      const guide = await generateStudyGuide(textContent);
+      const guide = await generateStudyGuide(textContent, difficulty);
       setStudyGuide(guide);
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred while generating the study guide.");
@@ -47,7 +48,7 @@ const App: React.FC = () => {
       <header className="bg-white shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <h1 className="text-3xl font-bold text-slate-800">
-            AI Study Guide Generator by Prof Nitin Phadkule
+            AI Study Companion Created by Prof Nitin Phadkule
           </h1>
           <p className="text-slate-500 mt-1">
             Upload a document (PDF, TXT, or CSV) to automatically generate a study guide.
@@ -56,7 +57,13 @@ const App: React.FC = () => {
       </header>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200">
-          <FileUpload onFileChange={handleFileChange} onGenerate={handleGenerate} isLoading={isLoading} />
+          <FileUpload 
+            onFileChange={handleFileChange} 
+            onGenerate={handleGenerate} 
+            isLoading={isLoading} 
+            difficulty={difficulty}
+            onDifficultyChange={setDifficulty}
+          />
         </div>
         
         {error && (

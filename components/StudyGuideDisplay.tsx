@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { StudyGuide, Flashcard, FlashcardStatus } from '../types';
 import FlashcardComponent from './Flashcard';
-import { SummaryIcon, QAIcon, FlashcardIcon, DownloadIcon } from './icons';
+import { SummaryIcon, QAIcon, FlashcardIcon, DownloadIcon, ArrowLeftIcon, ArrowRightIcon } from './icons';
 
 declare const jspdf: any;
 declare const html2canvas: any;
@@ -23,6 +23,7 @@ const StudyGuideDisplay: React.FC<StudyGuideDisplayProps> = ({ guide }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [flashcards, setFlashcards] = useState<FlashcardWithState[]>([]);
   const [flashcardFilter, setFlashcardFilter] = useState<'all' | 'needs_review'>('all');
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const pdfExportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,6 +34,11 @@ const StudyGuideDisplay: React.FC<StudyGuideDisplayProps> = ({ guide }) => {
     }));
     setFlashcards(initialFlashcards);
   }, [guide]);
+  
+  // Reset index when guide or filter changes
+  useEffect(() => {
+    setCurrentCardIndex(0);
+  }, [guide, flashcardFilter]);
 
   const handleUpdateFlashcardStatus = (id: number, status: FlashcardStatus) => {
     setFlashcards(prev => 
@@ -47,6 +53,14 @@ const StudyGuideDisplay: React.FC<StudyGuideDisplayProps> = ({ guide }) => {
     // "Needs Review" includes unseen cards and those explicitly marked
     return flashcards.filter(card => card.status === 'needs_review' || card.status === 'unseen');
   }, [flashcards, flashcardFilter]);
+
+  const handlePrevCard = () => {
+    setCurrentCardIndex(prev => Math.max(0, prev - 1));
+  };
+
+  const handleNextCard = () => {
+    setCurrentCardIndex(prev => Math.min(filteredFlashcards.length - 1, prev + 1));
+  };
 
   const handleExport = useCallback(async () => {
     if (!pdfExportRef.current || typeof html2canvas === 'undefined' || typeof jspdf === 'undefined') {
@@ -169,25 +183,62 @@ const StudyGuideDisplay: React.FC<StudyGuideDisplayProps> = ({ guide }) => {
           <div>
             <h2 className="text-2xl font-bold text-indigo-700 mb-4">Flashcards</h2>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                 <p className="text-slate-600">Click a card to flip it and mark your progress.</p>
+                 <p className="text-slate-600">Click a card to flip it. Use arrows to navigate.</p>
                 <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-lg">
                     <FilterButton filter="all" label="All" />
                     <FilterButton filter="needs_review" label="Needs Review" />
                 </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredFlashcards.length > 0 ? filteredFlashcards.map((card) => (
-                    <FlashcardComponent 
+            
+            {filteredFlashcards.length > 0 ? (
+              <div className="w-full max-w-lg mx-auto">
+                <div className="relative overflow-hidden h-56">
+                  <div
+                    className="flex h-full transition-transform duration-300 ease-in-out"
+                    style={{ transform: `translateX(-${currentCardIndex * 100}%)` }}
+                    aria-live="polite"
+                  >
+                    {filteredFlashcards.map((card, index) => (
+                      <div 
                         key={card.id} 
-                        front={card.front} 
-                        back={card.back}
-                        status={card.status}
-                        onStatusChange={(newStatus) => handleUpdateFlashcardStatus(card.id, newStatus)} 
-                    />
-                )) : (
-                    <p className="text-slate-500 col-span-full text-center py-8">No flashcards to display in this category.</p>
-                )}
-            </div>
+                        className="w-full flex-shrink-0 px-2"
+                        aria-hidden={index !== currentCardIndex}
+                      >
+                        <FlashcardComponent 
+                            front={card.front} 
+                            back={card.back}
+                            status={card.status}
+                            onStatusChange={(newStatus) => handleUpdateFlashcardStatus(card.id, newStatus)} 
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center justify-center gap-8 mt-6">
+                  <button
+                    onClick={handlePrevCard}
+                    disabled={currentCardIndex === 0}
+                    className="p-2 rounded-full bg-slate-200 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Previous card"
+                  >
+                    <ArrowLeftIcon className="h-6 w-6 text-slate-700" />
+                  </button>
+                  <p className="text-slate-600 font-medium tabular-nums text-lg" aria-label={`Card ${currentCardIndex + 1} of ${filteredFlashcards.length}`}>
+                    {currentCardIndex + 1} / {filteredFlashcards.length}
+                  </p>
+                  <button
+                    onClick={handleNextCard}
+                    disabled={currentCardIndex >= filteredFlashcards.length - 1}
+                    className="p-2 rounded-full bg-slate-200 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Next card"
+                  >
+                    <ArrowRightIcon className="h-6 w-6 text-slate-700" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+                <p className="text-slate-500 col-span-full text-center py-8">No flashcards to display in this category.</p>
+            )}
           </div>
         )}
       </div>

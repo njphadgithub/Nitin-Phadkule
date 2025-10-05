@@ -2,14 +2,17 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadIcon, FileIcon, GenerateIcon } from './icons';
+import { Difficulty } from '../types';
 
 interface FileUploadProps {
   onFileChange: (file: File | null) => void;
   onGenerate: () => void;
   isLoading: boolean;
+  difficulty: Difficulty;
+  onDifficultyChange: (difficulty: Difficulty) => void;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ onFileChange, onGenerate, isLoading }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ onFileChange, onGenerate, isLoading, difficulty, onDifficultyChange }) => {
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
 
@@ -37,6 +40,19 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileChange, onGenerate, isLoa
     },
     multiple: false,
   });
+
+  const DifficultyButton = ({ level, label }: { level: Difficulty, label: string }) => (
+    <button
+        onClick={() => onDifficultyChange(level)}
+        className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors w-full
+            ${difficulty === level
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-200'
+            }`}
+    >
+        {label}
+    </button>
+  );
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -74,11 +90,21 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileChange, onGenerate, isLoa
                         onFileChange(null);
                     }}
                     className="text-slate-500 hover:text-red-600 font-bold text-lg"
+                    aria-label="Remove file"
                 >
                     &times;
                 </button>
             </div>
         )}
+
+        <div className="w-full max-w-md">
+            <p className="text-sm font-medium text-slate-600 mb-2 text-center" id="difficulty-label">Select Difficulty Level</p>
+            <div className="flex justify-center bg-slate-100 p-1 rounded-lg" role="group" aria-labelledby="difficulty-label">
+                <DifficultyButton level="beginner" label="Beginner" />
+                <DifficultyButton level="intermediate" label="Intermediate" />
+                <DifficultyButton level="advanced" label="Advanced" />
+            </div>
+        </div>
 
         <button
             onClick={onGenerate}

@@ -1,6 +1,6 @@
 // FIX: Implement the Gemini API service to generate study guides.
 import { GoogleGenAI, Type } from "@google/genai";
-import { StudyGuide } from '../types';
+import { StudyGuide, Difficulty } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -40,8 +40,12 @@ const studyGuideSchema = {
 };
 
 
-export const generateStudyGuide = async (textContent: string): Promise<StudyGuide> => {
-    const prompt = `Based on the following document text, generate a comprehensive study guide. The study guide should include a summary of key topics, a list of question-and-answer pairs, and a set of flashcards.
+export const generateStudyGuide = async (textContent: string, difficulty: Difficulty): Promise<StudyGuide> => {
+    const prompt = `Based on the following document text, generate a comprehensive study guide tailored for a ${difficulty} level of understanding. The study guide should include a summary of key topics, a list of question-and-answer pairs, and a set of flashcards.
+
+- For a 'beginner' level, use simple language, focus on core concepts, and provide clear definitions.
+- For an 'intermediate' level, assume some prior knowledge and include more detailed explanations and connections between topics.
+- For an 'advanced' level, delve into complex details, nuances, and potential areas for further study.
 
 Document Text:
 ---
